@@ -7,7 +7,7 @@ import (
 )
 
 func sendMail(config Config, subject string, body string) {
-	log.Println("Mail: " + subject + "   >>> " + body)
+	log.Println("Mail: " + subject + "   >>> [" + body + "]")
 	if !config.Mail.Enabled {
 		return
 	}

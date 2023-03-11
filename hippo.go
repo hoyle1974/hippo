@@ -14,20 +14,27 @@ import (
 type hippo struct {
 	lock      sync.Mutex
 	config    Config
-	seen      map[string]bool
-	processed []string
+	db        FileDB
+	start     time.Time
+	skipped   int
+	processed int
 }
 
 type Hippo interface {
 	Start()
 }
 
-func NewHippo(config Config) Hippo {
+func NewHippo(config Config) (Hippo, error) {
 	var hippo hippo
 	hippo.config = config
-	hippo.seen = make(map[string]bool)
 
-	return &hippo
+	db, err := NewFileDB(config.DB.File)
+	if err != nil {
+		return nil, err
+	}
+	hippo.db = db
+
+	return &hippo, nil
 }
 
 func (h *hippo) Start() {
@@ -85,17 +92,40 @@ func (h *hippo) Start() {
 }
 
 func (h *hippo) BeginArchive() {
+	h.start = time.Now()
+	h.skipped = 0
+	h.processed = 0
+}
+
+func (h *hippo) statusTick() {
+	diff := time.Now().Sub(h.start)
+
+	if diff.Seconds() > 300 {
+		h.start = time.Now()
+
+		s := fmt.Sprintf("Processed %v files\n", h.processed)
+		if h.skipped != 0 {
+			s = s + fmt.Sprintf("Skipped %v files\n", h.skipped)
+		}
+
+		if h.skipped == 0 && h.processed != 0 {
+			return
+		}
+
+		sendMail(h.config, "In Progress . . .", s)
+	}
 }
 
 func (h *hippo) Archive(path string, info os.FileInfo) {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
+	h.statusTick()
+
 	// Have we seen this file before?
 	key := MD5file(path)
-	_, found := h.seen[key]
-	if found {
-		// Already processed
+	if h.db.DoesKeyExist(key) {
+		h.skipped++
 		return
 	}
 
@@ -108,19 +138,25 @@ func (h *hippo) Archive(path string, info os.FileInfo) {
 	os.MkdirAll(newPath, os.ModePerm)
 
 	fmt.Printf("Copying %s to %s\n", info.Name(), newPath)
+
 	CopyFile(path, newPath+"/"+info.Name())
 
-	h.processed = append(h.processed, path)
-	h.seen[key] = true
+	h.processed++
+	h.db.AddKey(key, newPath+"/"+info.Name(), mt)
 }
 
 func (h *hippo) FinishArchive() {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
-	s := fmt.Sprintf("Processed %v files.\n", len(h.processed))
+	s := fmt.Sprintf("Processed %v files\n", h.processed)
+	if h.skipped != 0 {
+		s = s + fmt.Sprintf("Skipped %v files\n", h.skipped)
+	}
 
-	h.processed = []string{}
+	if h.skipped == 0 && h.processed != 0 {
+		return
+	}
 
 	sendMail(h.config, "Process Images", s)
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/md5"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"log"
@@ -105,5 +106,5 @@ func MD5file(path string) string {
 		log.Fatal(err)
 	}
 
-	return string(h.Sum(nil))
+	return base64.StdEncoding.EncodeToString(h.Sum(nil))
 }

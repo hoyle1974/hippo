@@ -9,6 +9,7 @@ import (
 
 type Config struct {
 	Mail Mail `yaml:"mail"`
+	DB   DB   `yaml:"db"`
 }
 
 type Mail struct {
@@ -18,6 +19,10 @@ type Mail struct {
 	Password string `yaml:"password"`
 	Port     int    `yaml:"port"`
 	Smtp     string `yaml:"smtp"`
+}
+
+type DB struct {
+	File string `yaml:"file"`
 }
 
 func loadYaml() Config {
