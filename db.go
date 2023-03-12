@@ -7,10 +7,12 @@ import (
 	"log"
 	"os"
 	"strings"
+	"sync"
 	"time"
 )
 
 type fileDB struct {
+	lock     sync.Mutex
 	keys     map[string]bool
 	filePath string
 }
@@ -47,11 +49,16 @@ func NewFileDB(filePath string) (FileDB, error) {
 }
 
 func (f *fileDB) DoesKeyExist(key string) bool {
+	f.lock.Lock()
+	defer f.lock.Unlock()
 	_, ok := f.keys[key]
 	return ok
 }
 
 func (f *fileDB) AddKey(key string, path string, timestamp time.Time) {
+	f.lock.Lock()
+	defer f.lock.Unlock()
+
 	f.keys[key] = true
 
 	file, err := os.OpenFile(f.filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)

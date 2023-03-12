@@ -108,3 +108,11 @@ func MD5file(path string) string {
 
 	return base64.StdEncoding.EncodeToString(h.Sum(nil))
 }
+
+func FileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
+}
