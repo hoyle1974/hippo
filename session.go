@@ -1,38 +1,52 @@
 package main
 
 import (
+	"bytes"
 	"crypto/md5"
 	"encoding/base64"
 	"fmt"
+	"image"
+	"image/jpeg"
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
+
+	"github.com/nfnt/resize"
 )
 
 type node struct {
-	filepath string
-	info     os.FileInfo
-	destdir  string
+	filepath     string
+	info         os.FileInfo
+	destdir      string
+	thumbnaildir string
+	thumbnail    string
 }
 
 func newNode(filepath string, info os.FileInfo) node {
-
 	mt := info.ModTime()
 	year := mt.Format("2006")
 	month := mt.Format("200601")
 	day := mt.Format("20060102")
 
-	newPath := fmt.Sprintf("/home/jstrohm/dshome/hippo/%s/%s/%s", year, month, day)
 	return node{
-		filepath: filepath,
-		info:     info,
-		destdir:  newPath,
+		filepath:     filepath,
+		info:         info,
+		destdir:      fmt.Sprintf("/home/jstrohm/dshome/hippo/%s/%s/%s", year, month, day),
+		thumbnaildir: fmt.Sprintf("/home/jstrohm/dshome/hippo/thumbnail/%s/%s/%s", year, month, day),
 	}
 }
 
 func (n node) destFile() string {
 	return n.destdir + "/" + n.info.Name()
+}
+
+func (n node) getThumbnailDir() string {
+	return n.thumbnaildir
+}
+func (n node) getThumbnail() string {
+	return n.thumbnaildir + "/" + n.info.Name()
 }
 
 type session struct {
@@ -113,16 +127,19 @@ func (s *session) Complete() {
 func (s *session) archiveFolder() {
 	log.Printf("	Archive Folder: %s\n", s.path)
 
+	//s.toProcess = s.toProcess[0:50]
+
 	s.beginArchive()
 
-	for _, node := range s.toProcess {
-		s.Archive(node)
+	for idx, node := range s.toProcess {
+		s.Archive(idx, len(s.toProcess), node)
 	}
 
 	s.finishArchive()
 }
 
 func (s *session) beginArchive() {
+	fmt.Printf("Start archive of %d images\n", len(s.toProcess))
 	s.start = time.Now()
 	s.skipped = 0
 	s.processed = 0
@@ -145,10 +162,11 @@ func (s *session) statusTick() {
 		}
 
 		sendMail(s.hippo.config, "In Progress . . .", msg)
+		fmt.Println(msg)
 	}
 }
 
-func (s *session) Archive(node node) {
+func (s *session) Archive(idx int, max int, node node) {
 	s.statusTick()
 
 	// Load file into memory
@@ -157,6 +175,23 @@ func (s *session) Archive(node node) {
 		log.Printf("ReadFile: %v\n", err)
 		s.errors++
 		return
+	}
+
+	// Load image and resize if possible
+	if strings.HasSuffix(strings.ToLower(node.info.Name()), ".jpg") {
+		image, _, err := image.Decode(bytes.NewReader(data))
+		if err == nil {
+		}
+		newImage := resize.Resize(80, 0, image, resize.Bilinear)
+
+		os.MkdirAll(node.getThumbnailDir(), os.ModePerm)
+		f, err := os.Create(node.getThumbnail())
+		if err == nil {
+			if err = jpeg.Encode(f, newImage, nil); err != nil {
+				log.Printf("failed to encode: %v", err)
+			}
+		}
+		f.Close()
 	}
 
 	m := md5.Sum(data)
@@ -175,21 +210,32 @@ func (s *session) Archive(node node) {
 		return
 	}
 
-	fmt.Printf("Archiving %s\n", node.destFile())
+	fmt.Printf("Archiving (%d/%d) %s\n", idx+1, max, node.destFile())
 	s.processed++
 	s.hippo.db.AddKey(key, node.destFile(), node.info.ModTime())
 }
 
 func (s *session) finishArchive() {
+	defer fmt.Println("Finished archiving")
+	fmt.Println("Writing status message")
+	msg := ""
 
-	msg := fmt.Sprintf("Processed %v files\n", s.processed)
+	msg = fmt.Sprintf("Processed %v files\n", s.processed)
 	if s.skipped != 0 {
 		msg = msg + fmt.Sprintf("Skipped %v files\n", s.skipped)
 	}
 
-	if s.skipped == 0 && s.processed != 0 {
-		return
-	}
+	//if s.skipped == 0 && s.processed != 0 {
+	//sendMail(s.hippo.config, "Processed images", msg)
+	//return
+	//}
 
-	sendMail(s.hippo.config, "Process Images", msg)
+	images := []string{}
+	for _, node := range s.toProcess {
+		if FileExists(node.getThumbnail()) {
+			images = append(images, node.getThumbnail())
+		}
+	}
+	sendStatusMail(s.hippo.config, "Processed Images", msg, images)
+
 }
