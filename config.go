@@ -26,7 +26,13 @@ type DB struct {
 }
 
 func loadYaml() Config {
-	yfile, err := ioutil.ReadFile("hippo.yaml")
+	file := "~/.hippo/hippo.yaml"
+
+	if FileExists("./hippo.yaml") {
+		file = "./hippo.yaml"
+	}
+
+	yfile, err := ioutil.ReadFile(file)
 
 	if err != nil {
 		log.Fatal(err)

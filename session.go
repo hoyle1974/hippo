@@ -201,7 +201,7 @@ func (s *session) Archive(idx int, max int, node node) bool {
 
 	m := md5.Sum(data)
 	key := base64.StdEncoding.EncodeToString(m[:])
-	if s.hippo.db.DoesKeyExist(key) {
+	if s.hippo.db.DoesKeyExist(key) && FileExists(node.destFile()) {
 		s.skipped++
 		return false
 	}
