@@ -127,7 +127,7 @@ func (s *session) Complete() {
 func (s *session) archiveFolder() {
 	log.Printf("	Archive Folder: %s\n", s.path)
 
-	s.toProcess = s.toProcess[0:50]
+	//s.toProcess = s.toProcess[0:50]
 
 	s.beginArchive()
 
