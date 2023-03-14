@@ -127,13 +127,18 @@ func (s *session) Complete() {
 func (s *session) archiveFolder() {
 	log.Printf("	Archive Folder: %s\n", s.path)
 
-	//s.toProcess = s.toProcess[0:50]
+	s.toProcess = s.toProcess[0:50]
 
 	s.beginArchive()
 
+	processed := []node{}
 	for idx, node := range s.toProcess {
-		s.Archive(idx, len(s.toProcess), node)
+		if s.Archive(idx, len(s.toProcess), node) {
+			processed = append(processed, node)
+		}
 	}
+
+	s.toProcess = processed
 
 	s.finishArchive()
 }
@@ -152,9 +157,9 @@ func (s *session) statusTick() {
 	if diff.Seconds() > 300 {
 		s.start = time.Now()
 
-		msg := fmt.Sprintf("Processed %v files\n", s.processed)
+		msg := fmt.Sprintf("Archived %v files<br>", s.processed)
 		if s.skipped != 0 {
-			msg = msg + fmt.Sprintf("Skipped %v files\n", s.skipped)
+			msg = msg + fmt.Sprintf("Skipped %v files<br>", s.skipped)
 		}
 
 		if s.skipped == 0 && s.processed != 0 {
@@ -166,7 +171,7 @@ func (s *session) statusTick() {
 	}
 }
 
-func (s *session) Archive(idx int, max int, node node) {
+func (s *session) Archive(idx int, max int, node node) bool {
 	s.statusTick()
 
 	// Load file into memory
@@ -174,7 +179,7 @@ func (s *session) Archive(idx int, max int, node node) {
 	if err != nil {
 		log.Printf("ReadFile: %v\n", err)
 		s.errors++
-		return
+		return false
 	}
 
 	// Load image and resize if possible
@@ -198,7 +203,7 @@ func (s *session) Archive(idx int, max int, node node) {
 	key := base64.StdEncoding.EncodeToString(m[:])
 	if s.hippo.db.DoesKeyExist(key) {
 		s.skipped++
-		return
+		return false
 	}
 
 	os.MkdirAll(node.destdir, os.ModePerm)
@@ -207,12 +212,14 @@ func (s *session) Archive(idx int, max int, node node) {
 	if err != nil {
 		log.Printf("WriteFile: %v\n", err)
 		s.errors++
-		return
+		return false
 	}
 
 	fmt.Printf("Archiving (%d/%d) %s\n", idx+1, max, node.destFile())
 	s.processed++
 	s.hippo.db.AddKey(key, node.destFile(), node.info.ModTime())
+
+	return true
 }
 
 func (s *session) finishArchive() {
@@ -220,9 +227,9 @@ func (s *session) finishArchive() {
 	fmt.Println("Writing status message")
 	msg := ""
 
-	msg = fmt.Sprintf("Processed %v files\n", s.processed)
+	msg = fmt.Sprintf("Processed %v files.<br>", s.processed)
 	if s.skipped != 0 {
-		msg = msg + fmt.Sprintf("Skipped %v files\n", s.skipped)
+		msg = msg + fmt.Sprintf("Skipped %v files.<br>", s.skipped)
 	}
 
 	//if s.skipped == 0 && s.processed != 0 {

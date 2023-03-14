@@ -25,7 +25,7 @@ func sendStatusMail(config Config, subject string, msg string, images []string) 
 	for idx, image := range images {
 		m.Embed(image)
 		body += fmt.Sprintf(`<img src="cid:%v"/>`, filepath.Base(image))
-		if idx%5 == 4 {
+		if (idx+1)%4 == 0 {
 			body += "</div><div>"
 		}
 	}
