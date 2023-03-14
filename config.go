@@ -3,6 +3,7 @@ package main
 import (
 	"io/ioutil"
 	"log"
+	"os"
 
 	"gopkg.in/yaml.v2"
 )
@@ -26,12 +27,17 @@ type DB struct {
 }
 
 func loadYaml() Config {
-	file := "~/.hippo/hippo.yaml"
+	h, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal(err)
+	}
+	file := h + "/.hippo/hippo.yaml"
 
 	if FileExists("./hippo.yaml") {
 		file = "./hippo.yaml"
 	}
 
+	log.Printf("Loading Config: %s\n", file)
 	yfile, err := ioutil.ReadFile(file)
 
 	if err != nil {
