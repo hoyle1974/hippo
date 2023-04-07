@@ -185,18 +185,20 @@ func (s *session) Archive(idx int, max int, node node) bool {
 	// Load image and resize if possible
 	if strings.HasSuffix(strings.ToLower(node.info.Name()), ".jpg") {
 		image, _, err := image.Decode(bytes.NewReader(data))
-		if err == nil {
-		}
-		newImage := resize.Resize(80, 0, image, resize.Bilinear)
+		if err != nil {
+			log.Printf("failed to encode (%v): %v", node.info.Name(), err)
+		} else {
+			newImage := resize.Resize(80, 0, image, resize.Bilinear)
 
-		os.MkdirAll(node.getThumbnailDir(), os.ModePerm)
-		f, err := os.Create(node.getThumbnail())
-		if err == nil {
-			if err = jpeg.Encode(f, newImage, nil); err != nil {
-				log.Printf("failed to encode: %v", err)
+			os.MkdirAll(node.getThumbnailDir(), os.ModePerm)
+			f, err := os.Create(node.getThumbnail())
+			if err == nil {
+				if err = jpeg.Encode(f, newImage, nil); err != nil {
+					log.Printf("failed to encode: %v", err)
+				}
 			}
+			f.Close()
 		}
-		f.Close()
 	}
 
 	m := md5.Sum(data)
