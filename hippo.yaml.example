@@ -1,0 +1,14 @@
+mail:
+  enable: false
+  from: "from@email.com"
+  password: "api password"
+  to: "to@email.com"
+  port: 587
+  smtp: "smtp.com"
+  gui: false
+db:
+  file: "/Users/jstrohm/code/hippo/dev/hippo.db"
+storage:
+  path: "/Users/jstrohm/code/hippo/dev"
+dev:
+  images: "/Users/jstrohm/Pictures/"

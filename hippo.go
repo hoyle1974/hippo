@@ -9,17 +9,19 @@ import (
 )
 
 type hippo struct {
-	config Config
-	db     FileDB
+	config   Config
+	db       FileDB
+	feedback Feedback
 }
 
 type Hippo interface {
 	Start()
 }
 
-func NewHippo(config Config) (Hippo, error) {
+func NewHippo(config Config, feedback Feedback) (Hippo, error) {
 	var hippo hippo
 	hippo.config = config
+	hippo.feedback = feedback
 
 	db, err := NewFileDB(config.DB.File)
 	if err != nil {
@@ -43,6 +45,13 @@ func (h *hippo) Start() {
 	lastRemoveable := false
 	var mountPoint string
 	var session Session
+
+	if len(h.config.Dev.Images) > 0 {
+		fmt.Println("DEV MODE ENABLED")
+		session = NewSession(h, h.config.Dev.Images)
+		session.Start()
+		return
+	}
 
 	fmt.Println("----------------")
 	for {

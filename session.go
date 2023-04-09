@@ -24,7 +24,7 @@ type node struct {
 	thumbnail    string
 }
 
-func newNode(filepath string, info os.FileInfo) node {
+func newNode(config Config, filepath string, info os.FileInfo) node {
 	mt := info.ModTime()
 	year := mt.Format("2006")
 	month := mt.Format("200601")
@@ -33,8 +33,8 @@ func newNode(filepath string, info os.FileInfo) node {
 	return node{
 		filepath:     filepath,
 		info:         info,
-		destdir:      fmt.Sprintf("/home/jstrohm/dshome/hippo/%s/%s/%s", year, month, day),
-		thumbnaildir: fmt.Sprintf("/home/jstrohm/dshome/hippo/thumbnail/%s/%s/%s", year, month, day),
+		destdir:      fmt.Sprintf("%s/hippo/%s/%s/%s", config.Storage.Path, year, month, day),
+		thumbnaildir: fmt.Sprintf("%s/hippo/thumbnail/%s/%s/%s", config.Storage.Path, year, month, day),
 	}
 }
 
@@ -80,7 +80,7 @@ func (s *session) Start() {
 				return err
 			}
 			if !info.IsDir() && IsImage(path) {
-				s.toProcess = append(s.toProcess, newNode(path, info))
+				s.toProcess = append(s.toProcess, newNode(s.hippo.config, path, info))
 			}
 			return nil
 		})
@@ -133,7 +133,8 @@ func (s *session) archiveFolder() {
 
 	processed := []node{}
 	for idx, node := range s.toProcess {
-		if s.Archive(idx, len(s.toProcess), node) {
+		s.hippo.feedback.SetProgress(float64(idx) / float64(len(s.toProcess)))
+		if s.Archive(idx, len(s.toProcess), node, s.hippo.feedback) {
 			processed = append(processed, node)
 		}
 	}
@@ -171,7 +172,7 @@ func (s *session) statusTick() {
 	}
 }
 
-func (s *session) Archive(idx int, max int, node node) bool {
+func (s *session) Archive(idx int, max int, node node, feedback Feedback) bool {
 	s.statusTick()
 
 	// Load file into memory
@@ -183,11 +184,14 @@ func (s *session) Archive(idx int, max int, node node) bool {
 	}
 
 	// Load image and resize if possible
-	if strings.HasSuffix(strings.ToLower(node.info.Name()), ".jpg") {
+	if strings.HasSuffix(strings.ToLower(node.info.Name()), ".jpg") ||
+		strings.HasSuffix(strings.ToLower(node.info.Name()), ".png") ||
+		strings.HasSuffix(strings.ToLower(node.info.Name()), ".gif") {
 		image, _, err := image.Decode(bytes.NewReader(data))
 		if err != nil {
 			log.Printf("failed to encode (%v): %v", node.info.Name(), err)
 		} else {
+			go feedback.ShowImage(image)
 			newImage := resize.Resize(80, 0, image, resize.Bilinear)
 
 			os.MkdirAll(node.getThumbnailDir(), os.ModePerm)

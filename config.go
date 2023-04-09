@@ -9,8 +9,11 @@ import (
 )
 
 type Config struct {
-	Mail Mail `yaml:"mail"`
-	DB   DB   `yaml:"db"`
+	Mail    Mail    `yaml:"mail"`
+	DB      DB      `yaml:"db"`
+	Dev     Dev     `yaml:"dev"`
+	Storage Storage `yaml:"storage"`
+	Gui     bool    `yaml:"gui"`
 }
 
 type Mail struct {
@@ -24,6 +27,14 @@ type Mail struct {
 
 type DB struct {
 	File string `yaml:"file"`
+}
+
+type Storage struct {
+	Path string `yaml:"path"`
+}
+
+type Dev struct {
+	Images string `yaml:"images"`
 }
 
 func loadYaml() Config {
