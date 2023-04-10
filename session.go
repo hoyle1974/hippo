@@ -142,6 +142,7 @@ func (s *session) archiveFolder() {
 	s.toProcess = processed
 
 	s.finishArchive()
+	s.hippo.feedback.SetProgress(1.0)
 }
 
 func (s *session) beginArchive() {
