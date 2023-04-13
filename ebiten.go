@@ -9,6 +9,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hajimehoshi/ebiten/ebitenutil"
+	"github.com/nfnt/resize"
 )
 
 type EbitenGui struct {
@@ -28,8 +29,16 @@ func (e *EbitenGui) ShowImage(image image.Image) {
 	e.lock.Lock()
 	defer e.lock.Unlock()
 
+	newImage := image
+	if newImage.Bounds().Size().X > 2000 {
+		newImage = resize.Resize(2000, 0, newImage, resize.Bilinear)
+	}
+	if newImage.Bounds().Size().Y > 2000 {
+		newImage = resize.Resize(0, 2000, newImage, resize.Bilinear)
+	}
+
 	var err error
-	e.image, err = ebiten.NewImageFromImage(image, ebiten.FilterLinear)
+	e.image, err = ebiten.NewImageFromImage(newImage, ebiten.FilterLinear)
 	if err != nil {
 		panic(err)
 	}
