@@ -1,7 +1,6 @@
 package main
 
 import (
-	"io/ioutil"
 	"log"
 	"os"
 
@@ -9,11 +8,12 @@ import (
 )
 
 type Config struct {
-	Mail    Mail    `yaml:"mail"`
-	DB      DB      `yaml:"db"`
-	Dev     Dev     `yaml:"dev"`
-	Storage Storage `yaml:"storage"`
-	Gui     bool    `yaml:"gui"`
+	Mail      Mail    `yaml:"mail"`
+	DB        DB      `yaml:"db"`
+	Dev       Dev     `yaml:"dev"`
+	Storage   Storage `yaml:"storage"`
+	FyneGUI   bool    `yaml:"fyneGUI"`
+	EbitenGui bool    `yaml:"ebitenGUI"`
 }
 
 type Mail struct {
@@ -49,7 +49,7 @@ func loadYaml() Config {
 	}
 
 	log.Printf("Loading Config: %s\n", file)
-	yfile, err := ioutil.ReadFile(file)
+	yfile, err := os.ReadFile(file)
 
 	if err != nil {
 		log.Fatal(err)

@@ -33,7 +33,7 @@ func sendStatusMail(config Config, subject string, msg string, images []string) 
 	fmt.Println(body)
 	m.SetBody("text/html", body)
 
-	d := gomail.NewPlainDialer(config.Mail.Smtp, config.Mail.Port, config.Mail.From, config.Mail.Password)
+	d := gomail.NewDialer(config.Mail.Smtp, config.Mail.Port, config.Mail.From, config.Mail.Password)
 
 	if err := d.DialAndSend(m); err != nil {
 		panic(err)

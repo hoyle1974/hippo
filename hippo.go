@@ -11,17 +11,17 @@ import (
 type hippo struct {
 	config   Config
 	db       FileDB
-	feedback Feedback
+	feedback Gui
 }
 
 type Hippo interface {
 	Start()
 }
 
-func NewHippo(config Config, feedback Feedback) (Hippo, error) {
+func NewHippo(config Config, gui Gui) (Hippo, error) {
 	var hippo hippo
 	hippo.config = config
-	hippo.feedback = feedback
+	hippo.feedback = gui
 
 	db, err := NewFileDB(config.DB.File)
 	if err != nil {

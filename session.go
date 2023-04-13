@@ -21,7 +21,6 @@ type node struct {
 	info         os.FileInfo
 	destdir      string
 	thumbnaildir string
-	thumbnail    string
 }
 
 func newNode(config Config, filepath string, info os.FileInfo) node {
@@ -111,9 +110,9 @@ func (s *session) Start() {
 	msg = msg + fmt.Sprintf("Files need to be archived: %v\n", len(s.toProcess))
 
 	if len(s.toProcess) > 0 {
-		msg = msg + fmt.Sprintf("Starting archive, will message with status every few minutes\n")
+		msg = msg + "Starting archive, will message with status every few minutes\n"
 	} else {
-		msg = msg + fmt.Sprintf("There are no files that need to be archived\n")
+		msg = msg + "There are no files that need to be archived\n"
 	}
 
 	sendMail(s.hippo.config, "Starting Archive", msg)
@@ -154,7 +153,7 @@ func (s *session) beginArchive() {
 }
 
 func (s *session) statusTick() {
-	diff := time.Now().Sub(s.start)
+	diff := time.Since(s.start)
 
 	if diff.Seconds() > 300 {
 		s.start = time.Now()
@@ -173,7 +172,7 @@ func (s *session) statusTick() {
 	}
 }
 
-func (s *session) Archive(idx int, max int, node node, feedback Feedback) bool {
+func (s *session) Archive(idx int, max int, node node, feedback Gui) bool {
 	s.statusTick()
 
 	// Load file into memory
