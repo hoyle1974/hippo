@@ -45,9 +45,10 @@ func (e *EbitenGui) ShowImage(image image.Image) {
 }
 
 func (e *EbitenGui) Start() {
-	ebiten.SetWindowSize(640, 480)
-	ebiten.SetWindowTitle("Hippo")
+	ebiten.SetFullscreen(true)
 	ebiten.SetWindowResizable(true)
+	ebiten.SetWindowTitle("Hippo")
+
 	if err := ebiten.RunGame(e); err != nil {
 		log.Fatal(err)
 	}
@@ -98,10 +99,10 @@ func (e *EbitenGui) Draw(screen *ebiten.Image) {
 	}
 
 	ebitenutil.DrawRect(screen, 0, 0, screenWidth, 18, color.RGBA64{16384, 16384, 65535, 32767})
-	ebitenutil.DebugPrint(screen, fmt.Sprintf("Progress %v%%", int(e.progress*100)))
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("     Progress %v%%", int(e.progress*100)))
 
 }
 
 func (g *EbitenGui) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return 320, 240
+	return 1024, 600
 }
