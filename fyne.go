@@ -40,8 +40,8 @@ func (f *FyneGui) Start() {
 func createFyneGui() Gui {
 	fmt.Println("Fyne GUI")
 
-	a := app.New()
-	w := a.NewWindow("Hungry, Hungry Hippo")
+	application := app.New()
+	window := application.NewWindow("Hungry, Hungry Hippo")
 	//w.SetFullScreen(true)
 
 	image := canvas.NewImageFromResource(theme.FyneLogo())
@@ -49,11 +49,10 @@ func createFyneGui() Gui {
 
 	progress := widget.NewProgressBar()
 
-	c := container.NewBorder(progress, nil, nil, nil, image)
-	c.Resize(fyne.NewSize(512, 512))
-	w.Resize(fyne.NewSize(512, 512))
+	border := container.NewBorder(progress, nil, nil, nil, image)
+	window.Resize(fyne.NewSize(512, 512))
 
-	w.SetContent(c)
+	window.SetContent(border)
 
-	return &FyneGui{progress, c, image, w}
+	return &FyneGui{progress, border, image, window}
 }
