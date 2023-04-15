@@ -10,6 +10,7 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+	"github.com/nfnt/resize"
 )
 
 type FyneGui struct {
@@ -23,7 +24,9 @@ func (f *FyneGui) SetProgress(value float64) {
 	f.progress.SetValue(value)
 }
 
-func (f *FyneGui) ShowImage(image image.Image) {
+func (f *FyneGui) ShowImage(origImage image.Image) {
+	image := resize.Resize(128, 0, origImage, resize.Bilinear)
+
 	newImage := canvas.NewImageFromImage(image)
 	newImage.FillMode = canvas.ImageFillContain
 

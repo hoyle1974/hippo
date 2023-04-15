@@ -11,9 +11,9 @@ import (
 
 func sendStatusMail(config Config, subject string, msg string, images []string) {
 	log.Printf("Mail: "+subject+"   >>> ["+msg+"] Images %v\n", len(images))
-	//if !config.Mail.Enabled {
-	//return
-	//}
+	if !config.Mail.Enabled {
+	return
+	}
 
 	m := gomail.NewMessage()
 	m.SetHeader("From", config.Mail.From)

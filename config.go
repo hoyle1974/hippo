@@ -13,7 +13,6 @@ type Config struct {
 	Dev       Dev     `yaml:"dev"`
 	Storage   Storage `yaml:"storage"`
 	FyneGUI   bool    `yaml:"fyneGUI"`
-	EbitenGui bool    `yaml:"ebitenGUI"`
 }
 
 type Mail struct {
