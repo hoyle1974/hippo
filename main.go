@@ -13,9 +13,7 @@ func main() {
 
 	var gui Gui
 
-	if config.FyneGUI {
-		gui = createFyneGui()
-	} else if config.EbitenGui {
+	if config.EbitenGui {
 		gui = createEbitenGui()
 	} else {
 		gui = createNilGui()
